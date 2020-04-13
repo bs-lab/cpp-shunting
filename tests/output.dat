@@ -1,0 +1,14 @@
+card: A + BB *C + 10.0**3 + 7.6.5
+
+TOKEN VALUE AND TYPE
+i = 0	A	variable
+i = 1	+	operator
+i = 2	BB	variable
+i = 3	*	operator
+i = 4	C	variable
+i = 5	+	operator
+i = 6	10.0	number
+i = 7	**	operator
+i = 8	3	number
+i = 9	+	operator
+i = 10	7.6.5	number
