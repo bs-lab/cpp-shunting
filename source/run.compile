@@ -1,1 +1,3 @@
-g++ main.cpp -o parse_test
+#!/bin/bash
+
+g++ parser.cpp  main.cpp -o parse_test
