@@ -1,14 +1,56 @@
-card: A + BB *C + 10.0**3 + 7.6.5
 
-TOKEN VALUE AND TYPE
-i = 0	A	variable
-i = 1	+	operator
-i = 2	BB	variable
-i = 3	*	operator
-i = 4	C	variable
-i = 5	+	operator
-i = 6	10.0	number
-i = 7	**	operator
-i = 8	3	number
-i = 9	+	operator
-i = 10	7.6.5	number
+card:  51*(41+31) 
+tokens: 51 * ( 41 + 31 )
+rpn stack: 51 41 31 + *
+
+card:  51*41+ BB * 77
+tokens: 51 * 41 + BB * 77
+rpn stack: 51 41 * BB 77 * +
+
+card:  51*41+ +BB * 77
+tokens: 51 * 41 + BB * 77
+rpn stack: 51 41 * BB 77 * +
+
+card:  51*41+ -31 * 77
+tokens: 51 * 41 + -31 * 77
+rpn stack: 51 41 * -31 77 * +
+
+card:  51*41+ +31 * 77
+tokens: 51 * 41 + 31 * 77
+rpn stack: 51 41 * 31 77 * +
+
+card:  51*41+ 31 * 77
+tokens: 51 * 41 + 31 * 77
+rpn stack: 51 41 * 31 77 * +
+
+card:  ((C1*BB))+ A1 
+tokens: ( ( C1 * BB ) ) + A1
+rpn stack: C1 BB * A1 +
+
+card:  ((C1*BB^2)^3.3)+ A1 
+tokens: ( ( C1 * BB ^ 2 ) ^ 3.3 ) + A1
+rpn stack: C1 BB 2 ^ * 3.3 ^ A1 +
+
+card:  ((C1*BB**2)**3.3)+ A1 
+tokens: ( ( C1 * BB ** 2 ) ** 3.3 ) + A1
+rpn stack: C1 BB 2 ** * 3.3 ** A1 +
+
+card: 51*2 + 3 == 105
+tokens: 51 * 2 + 3 == 105
+rpn stack: 51 2 * 3 + 105 ==
+
+card: A + B * C == G * H + Q
+tokens: A + B * C == G * H + Q
+rpn stack: A B C * + G H * Q + ==
+
+card: A + B * C >= G * H + Q  == 7
+tokens: A + B * C >= G * H + Q == 7
+rpn stack: A B C * + G H * Q + 7 == >=
+
+card: A + B * 3 != -9.9 * H + Q
+tokens: A + B * 3 != -9.9 * H + Q
+rpn stack: A B 3 * + -9.9 H * Q + !=
+
+card: A + B * 3 <> +9.9 * H + Q
+tokens: A + B * 3 <> 9.9 * H + Q
+rpn stack: A B 3 * + 9.9 H * Q + <>

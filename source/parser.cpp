@@ -6,41 +6,41 @@
 using namespace std;
 
 
-char peek_next_char(const string& card, const uint& curr_loc) {
-  if (curr_loc == card.length()) {
+static vector<string> operators = {"**", "^", "/", "*", "-", "+", "==",
+                                    "<=", ">=", "<", ">", "<>", "!="};
+static vector<int> oper_priority = {3, 3, 2, 2, 1, 1, 0,
+                                    0, 0, 0, 0, 0, 0};
+
+
+char peek_next_char(const string& card, const uint& curr_loc)
+{
+  if (curr_loc == card.length())
     return '\0';
-  } else {
+  else
     return card[curr_loc];
-  }
 }
 
 
-int get_oper_index(const vector<string>& operators, const string& oper) {
+int get_oper_index(const vector<string>& operators, const string& oper)
+{
   for (uint i = 0; i < operators.size(); i++) {
-    if (oper == operators[i]) {
+    if (oper == operators[i])
       return i;
-    }
   }
   return -1;
 }
 
+int get_priority(const string& oper)
+{
+  // use enum for this maybe? something like a map/dict maybe?
+  int indx = get_oper_index(operators, oper);
+  return oper_priority[indx];
+}
 
-int tokenizer(const string& card, vector<TokenClass>& tokens) {
-  vector<string> operators(13);
-  operators[0] = "**";
-  operators[1] = "^";
-  operators[2] = "/";
-  operators[3] = "*";
-  operators[4] = "-";
-  operators[5] = "+";
-  operators[6] = "==";
-  operators[7] = "<=";
-  operators[8] = ">=";
-  operators[9] = "<";
-  operators[10] = ">";
-  operators[11] = "<>";
-  operators[12] = "!=";
 
+int tokenizer(const string& card, vector<TokenClass>& tokens)
+{
+  // tokenizes the input card
   char curr_char, next_char;
   uint c = 0;
   while (c < card.length()) {
@@ -111,11 +111,104 @@ int tokenizer(const string& card, vector<TokenClass>& tokens) {
     }
   }
 
-  //cout << "\n\nTOKENS\n";
-  //cout << "size=" << tokens.size() << endl;
-  //for (uint i = 0; i < tokens.size(); i++) {
-    //cout  << "i = " << i << "\t" << tokens[i].svalue << "\t" << tokens[i].ttype << endl;
-  //}
+  // Clean up any instances where a plus or minus sign (unary) that should be assocated with
+  //   a value was instead treated as a separate token.
+
+  //for (uint t = 0; t < tokens.size() - 2; t++) {
+  uint t = 0;
+  //while (true) {
+  while (t < tokens.size() - 2) {
+    if (tokens[t].ttype == "operator" && tokens[t+1].ttype == "operator" &&
+        (tokens[t+2].ttype == "number" || tokens[t+2].ttype == "variable")) {
+      if (tokens[t+1].svalue == "-") {
+        if (tokens[t+2].ttype == "number") {
+          // change "... * - 31" to "... * -31"
+          tokens[t+1].svalue = "-" + tokens[t+2].svalue;
+          tokens[t+1].ttype = tokens[t+2].ttype;
+
+          for (uint i = t+2; i < tokens.size()-1; i++)
+            tokens[i] = tokens[i+1];
+          tokens.pop_back();
+
+        } else {
+          TokenClass tempy("(", "left_paren");
+          tokens.insert(tokens.begin()+t+1, tempy);
+
+          tokens[t+2].svalue = "-1";
+          tokens[t+2].ttype = "number";
+
+          TokenClass tempy2("*", "operator");
+          tokens.insert(tokens.begin()+t+3, tempy2);
+
+          TokenClass tempy3(")", "right_paren");
+          tokens.insert(tokens.begin()+t+5, tempy3);
+        }
+      } else if (tokens[t+1].svalue == "+") {
+        // change "* + 31" to "* 31"
+        for (uint i = t+1; i < tokens.size() -1; i++)
+          tokens[i] = tokens[i+1];
+        tokens.pop_back();
+      } else {
+        cout << "error in pattern" << endl;
+        cout << "  at t:   " << tokens[t].svalue << endl;
+        cout << "  at t+1: " << tokens[t+1].svalue << endl;
+        cout << "  at t+2: " << tokens[t+2].svalue << endl;
+      }
+    }
+    t++;
+  }
+
+  return 0;
+}
+
+
+int create_stack(const vector<TokenClass>& tokens, vector<string>& output_stack)
+{
+  // using Shunting -yard algorithm to convert list of tokens into Reverse Polish notation (RPN)
+  vector<string> oper_stack;
+
+  for (uint t = 0; t < tokens.size(); t++) {
+    if (tokens[t].ttype == "number" || tokens[t].ttype == "variable") {
+      output_stack.push_back(tokens[t].svalue);
+    }
+
+    if (tokens[t].ttype == "operator") {
+      int priority = get_priority(tokens[t].svalue);
+      while (oper_stack.size() > 0) {
+        int top_priority = get_priority(oper_stack.back());
+        if (priority >= top_priority || oper_stack.back() == "(") break;
+
+        output_stack.push_back(oper_stack.back());
+        oper_stack.pop_back();
+      }
+      oper_stack.push_back(tokens[t].svalue);
+    }
+
+    if (tokens[t].ttype == "left_paren") {
+      oper_stack.push_back(tokens[t].svalue);
+    }
+
+    if (tokens[t].ttype == "right_paren") {
+      if (oper_stack.size() == 0) {
+        cout << "unexpected closing parentheses" << endl;
+      }
+
+      while (oper_stack.back() != "(") {
+        output_stack.push_back(oper_stack.back());
+        oper_stack.pop_back();
+      }
+
+      if (oper_stack.back() == "(") {
+        oper_stack.pop_back();
+      }
+    }
+  }
+
+  // move remaining operation stack onto output stack
+  while (oper_stack.size() > 0) {
+    output_stack.push_back(oper_stack.back());
+    oper_stack.pop_back();
+  }
 
   return 0;
 }
